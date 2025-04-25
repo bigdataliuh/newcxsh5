@@ -50,6 +50,7 @@
         border-radius: 12px;
         max-width: 90%;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
       }
       .input-area {
         display: flex;
@@ -81,11 +82,11 @@
     <div class="chat-container">
       <div class="messages" id="chat-box">
         <div class="message">您好，请叫我曹先生</div>
-        <div class="message">🔍 红楼梦中有哪些美食？</div>
-        <div class="message">🔍 红楼梦中有哪些判词？</div>
-        <div class="message">🔍 红楼梦中有哪些故事？</div>
-        <div class="message">🔍 大梦·红楼有哪些值得一看的亮点？</div>
-        <div class="message">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
+        <div class="message quick">🔍 红楼梦中有哪些美食？</div>
+        <div class="message quick">🔍 红楼梦中有哪些判词？</div>
+        <div class="message quick">🔍 红楼梦中有哪些故事？</div>
+        <div class="message quick">🔍 大梦·红楼有哪些值得一看的亮点？</div>
+        <div class="message quick">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
       </div>
       <div class="input-area">
         <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
@@ -130,6 +131,15 @@
 
       document.getElementById("user-input").addEventListener("keydown", function (e) {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
+      });
+
+      // 添加浮窗点击自动填充输入框
+      document.querySelectorAll(".message.quick").forEach(el => {
+        el.addEventListener("click", () => {
+          const input = document.getElementById("user-input");
+          input.value = el.textContent.replace(/^🔍\s*/, "");
+          input.focus();
+        });
       });
     </script>
   </body>
