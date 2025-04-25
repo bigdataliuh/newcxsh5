@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>曹先生智能问答</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow: hidden;
+      }
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: -1;
+      }
+      .chat-container {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 60vw;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+      }
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 10px;
+      }
+      .message {
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px 14px;
+        border-radius: 12px;
+        max-width: 90%;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      .input-area {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding-top: 10px;
+      }
+      .input-area input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 999px;
+        border: none;
+        outline: none;
+      }
+      .input-area button {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 999px;
+        background-color: #d4237a;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <video class="video-bg" src="video.mov" autoplay muted loop></video>
+    <div class="chat-container">
+      <div class="messages" id="chat-box">
+        <div class="message">您好，请叫我曹先生</div>
+        <div class="message">🔍 红楼梦中有哪些美食？</div>
+        <div class="message">🔍 红楼梦中有哪些判词？</div>
+        <div class="message">🔍 红楼梦中有哪些故事？</div>
+        <div class="message">🔍 大梦·红楼有哪些值得一看的亮点？</div>
+        <div class="message">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
+        <button onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById("user-input");
+        const question = input.value.trim();
+        if (!question) return;
+
+        const chatBox = document.getElementById("chat-box");
+        const userMsg = document.createElement("div");
+        userMsg.className = "message";
+        userMsg.textContent = question;
+        chatBox.appendChild(userMsg);
+
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const responseMsg = document.createElement("div");
+        responseMsg.className = "message";
+        responseMsg.textContent = "正在思考...";
+        chatBox.appendChild(responseMsg);
+
+        try {
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
+          });
+          const data = await res.json();
+          responseMsg.textContent = data.answer || "曹先生一时语塞，请稍后再问。";
+        } catch (err) {
+          responseMsg.textContent = "网络错误，请稍后重试。";
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      document.getElementById("user-input").addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
+      });
+    </script>
+  </body>
+</html>
