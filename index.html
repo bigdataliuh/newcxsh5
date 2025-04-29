@@ -134,6 +134,7 @@
             body: JSON.stringify({ question })
           });
           const data = await res.json();
+          const cleanAnswer = (data.answer || "").replace(/<\/?quick_question>/g, "");
           responseMsg.innerHTML = parseQuickTags(data.answer || "曹先生一时语塞，请稍后再问。");
         } catch (err) {
           responseMsg.textContent = "网络错误，请稍后重试。";
