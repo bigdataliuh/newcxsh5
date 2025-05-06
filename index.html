@@ -51,7 +51,7 @@
         border-radius: 12px;
         max-width: 90%;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        white-space: pre-wrap;
+        cursor: pointer;
       }
       .input-area {
         display: flex;
@@ -75,17 +75,6 @@
         color: white;
         cursor: pointer;
         font-weight: bold;
-      }
-      .quick-button {
-        margin-top: 6px;
-        margin-right: 6px;
-        padding: 8px 12px;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 999px;
-        cursor: pointer;
-        display: inline-block;
-        font-size: 14px;
       }
     </style>
   </head>
@@ -115,18 +104,19 @@
 
         const chatBox = document.getElementById("chat-box");
 
-        // 用户提问显示
+        // 用户提问消息
         const userMsg = document.createElement("div");
         userMsg.className = "message";
         userMsg.textContent = question;
         chatBox.appendChild(userMsg);
-        input.value = "";
 
-        // AI 回复容器
+        // 回答消息占位
         const responseMsg = document.createElement("div");
         responseMsg.className = "message";
+        responseMsg.textContent = "思考中...";
         chatBox.appendChild(responseMsg);
 
+        input.value = "";
         chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
@@ -138,59 +128,31 @@
 
           const reader = res.body.getReader();
           const decoder = new TextDecoder("utf-8");
-          let buffer = "";
+          let fullText = "";
 
           while (true) {
-            const { value, done } = await reader.read();
+            const { done, value } = await reader.read();
             if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+            const chunk = decoder.decode(value, { stream: true });
 
-            const parts = buffer.split("\n\n");
-            buffer = parts.pop();
-
-            for (let part of parts) {
-              if (part.startsWith("data: ")) {
-                const content = part.replace("data: ", "").trim();
-
-                // 如果是 JSON 格式（带 content 字段）
-                try {
-                  const json = JSON.parse(content);
-                  if (json.content) {
-                    responseMsg.textContent += json.content;
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                  }
-                } catch (e) {
-                  responseMsg.textContent += content;
-                  chatBox.scrollTop = chatBox.scrollHeight;
-                }
+            const lines = chunk.split("\n").filter(line => line.startsWith("data: "));
+            for (const line of lines) {
+              const jsonStr = line.replace(/^data:\s*/, "");
+              try {
+                const json = JSON.parse(jsonStr);
+                const content = json.data || json.content || json.answer || "";
+                fullText += content;
+                responseMsg.textContent = fullText;
+                chatBox.scrollTop = chatBox.scrollHeight;
+              } catch (e) {
+                console.warn("解析失败：", jsonStr);
               }
             }
           }
-
-          // 提取 <quick_question> 内容
-          const fullText = responseMsg.textContent;
-          const matches = [...fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
-          if (matches.length > 0) {
-            responseMsg.textContent = fullText.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
-            const btnContainer = document.createElement("div");
-            for (let m of matches) {
-              const btn = document.createElement("div");
-              btn.className = "quick-button";
-              btn.textContent = m[1].trim();
-              btn.onclick = () => {
-                document.getElementById("user-input").value = btn.textContent;
-                document.getElementById("user-input").focus();
-              };
-              btnContainer.appendChild(btn);
-            }
-            chatBox.appendChild(btnContainer);
-            chatBox.scrollTop = chatBox.scrollHeight;
-          }
         } catch (err) {
-          responseMsg.textContent = "❌ 网络错误，曹先生未能作答。";
+          console.error(err);
+          responseMsg.textContent = "网络错误，请稍后重试。";
         }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
       }
 
       document.getElementById("user-input").addEventListener("keydown", function (e) {
