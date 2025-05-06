@@ -103,18 +103,21 @@
         if (!question) return;
 
         const chatBox = document.getElementById("chat-box");
+
+        // 用户提问消息
         const userMsg = document.createElement("div");
         userMsg.className = "message";
         userMsg.textContent = question;
         chatBox.appendChild(userMsg);
 
-        input.value = "";
-        chatBox.scrollTop = chatBox.scrollHeight;
-
+        // 回答消息占位
         const responseMsg = document.createElement("div");
         responseMsg.className = "message";
-        responseMsg.textContent = "";
+        responseMsg.textContent = "思考中...";
         chatBox.appendChild(responseMsg);
+
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
           const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
@@ -125,30 +128,31 @@
 
           const reader = res.body.getReader();
           const decoder = new TextDecoder("utf-8");
-          let buffer = "";
+          let fullText = "";
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+            const chunk = decoder.decode(value, { stream: true });
 
-            const lines = buffer.split("\n\n");
-            for (let i = 0; i < lines.length - 1; i++) {
-              const line = lines[i].trim();
-              if (line.startsWith("data: ")) {
-                const content = line.replace(/^data:\s*/, "");
-                responseMsg.textContent += content.replace(/<\/?quick_question>/g, "");
+            const lines = chunk.split("\n").filter(line => line.startsWith("data: "));
+            for (const line of lines) {
+              const jsonStr = line.replace(/^data:\s*/, "");
+              try {
+                const json = JSON.parse(jsonStr);
+                const content = json.data || json.content || json.answer || "";
+                fullText += content;
+                responseMsg.textContent = fullText;
                 chatBox.scrollTop = chatBox.scrollHeight;
+              } catch (e) {
+                console.warn("解析失败：", jsonStr);
               }
             }
-            buffer = lines[lines.length - 1];
           }
-
         } catch (err) {
+          console.error(err);
           responseMsg.textContent = "网络错误，请稍后重试。";
         }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
       }
 
       document.getElementById("user-input").addEventListener("keydown", function (e) {
