@@ -113,7 +113,7 @@
 
         const responseMsg = document.createElement("div");
         responseMsg.className = "message";
-        responseMsg.textContent = "正在思考...";
+        responseMsg.textContent = "";
         chatBox.appendChild(responseMsg);
 
         try {
@@ -122,9 +122,27 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question })
           });
-          const data = await res.json();
-          const cleanAnswer = (data.answer || "").replace(/<\/?quick_question>/g, "");
-          responseMsg.textContent = cleanAnswer || "曹先生一时语塞，请稍后再问。";
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n\n");
+            for (let i = 0; i < lines.length - 1; i++) {
+              const line = lines[i].trim();
+              if (line.startsWith("data: ")) {
+                const content = line.replace(/^data:\s*/, "");
+                responseMsg.textContent += content.replace(/<\/?quick_question>/g, "");
+                chatBox.scrollTop = chatBox.scrollHeight;
+              }
+            }
+            buffer = lines[lines.length - 1];
+          }
 
         } catch (err) {
           responseMsg.textContent = "网络错误，请稍后重试。";
