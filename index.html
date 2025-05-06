@@ -149,6 +149,39 @@
               }
             }
           }
+
+          // ✅ 提取 quick_question 标签内容
+          const matches = [...fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+          if (matches.length > 0) {
+            responseMsg.textContent = fullText.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
+
+            const btnContainer = document.createElement("div");
+            btnContainer.style.display = "flex";
+            btnContainer.style.flexWrap = "wrap";
+            btnContainer.style.marginTop = "8px";
+            btnContainer.style.gap = "6px";
+
+            for (let m of matches) {
+              const btn = document.createElement("div");
+              btn.textContent = m[1].trim();
+              btn.style.padding = "8px 12px";
+              btn.style.background = "white";
+              btn.style.border = "1px solid #ccc";
+              btn.style.borderRadius = "999px";
+              btn.style.cursor = "pointer";
+              btn.style.fontSize = "14px";
+              btn.onclick = () => {
+                const input = document.getElementById("user-input");
+                input.value = btn.textContent;
+                input.focus();
+              };
+              btnContainer.appendChild(btn);
+            }
+
+            chatBox.appendChild(btnContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
+          }
+
         } catch (err) {
           console.error(err);
           responseMsg.textContent = "网络错误，请稍后重试。";
