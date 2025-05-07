@@ -129,40 +129,6 @@
             input.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            const eventSource = new EventSource("https://web-production-6954e.up.railway.app/ask");
-            eventSource.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                responseMsg.innerHTML = data.data;
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-                const quickQuestions = document.querySelectorAll("quick_question");
-                if (quickQuestions.length > 0) {
-                    const btnContainer = document.createElement("div");
-                    btnContainer.style.marginTop = "8px";
-
-                    quickQuestions.forEach(quickQuestion => {
-                        const btn = document.createElement("span");
-                        btn.className = "quick-question-btn";
-                        btn.textContent = quickQuestion.textContent.trim();
-                        btn.onclick = () => {
-                            const input = document.getElementById("user-input");
-                            input.value = btn.textContent;
-                            input.focus();
-                            sendMessage();
-                        };
-                        btnContainer.appendChild(btn);
-                    });
-
-                    responseMsg.appendChild(btnContainer);
-                }
-            };
-
-            eventSource.onerror = (error) => {
-                console.error("EventSource failed:", error);
-                responseMsg.textContent = "网络错误，请稍后重试。";
-                eventSource.close();
-            };
-
             try {
                 const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
                     method: "POST",
@@ -174,9 +140,54 @@
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
 
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split("\n").filter(line => line.startsWith("data: "));
+                    for (const line of lines) {
+                        const jsonStr = line.replace(/^data:\s*/, "");
+                        try {
+                            const json = JSON.parse(jsonStr);
+                            const content = json.data || json.content;
+                            if (content) {
+                                responseMsg.textContent = content;
+                                chatBox.scrollTop = chatBox.scrollHeight;
+
+                                // 提取 quick_question 标签内容
+                                const quickQuestions = responseMsg.querySelectorAll("quick_question");
+                                if (quickQuestions.length > 0) {
+                                    const btnContainer = document.createElement("div");
+                                    btnContainer.style.marginTop = "8px";
+
+                                    quickQuestions.forEach(quickQuestion => {
+                                        const btn = document.createElement("span");
+                                        btn.className = "quick-question-btn";
+                                        btn.textContent = quickQuestion.textContent.trim();
+                                        btn.onclick = () => {
+                                            const input = document.getElementById("user-input");
+                                            input.value = btn.textContent;
+                                            input.focus();
+                                            sendMessage();
+                                        };
+                                        btnContainer.appendChild(btn);
+                                    });
+
+                                    responseMsg.appendChild(btnContainer);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("解析失败：", jsonStr);
+                        }
+                    }
+                }
+
             } catch (err) {
                 console.error(err);
-                responseMsg.textContent = "请求错误，请稍后重试。";
+                responseMsg.textContent = "网络错误，请稍后重试。";
             }
         }
 
