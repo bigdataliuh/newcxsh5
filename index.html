@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>曹先生智能问答</title>
   <style>
     * {
@@ -22,50 +22,35 @@
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      object-position: center;
       z-index: -1;
     }
     .chat-container {
       position: absolute;
-      top: 10vh;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90vw;
-      max-width: 640px;
-      height: 80vh;
+      top: 17vh;
+      right: 15vw; /* ✅ 向右移动 */
+      height: 76vh;
+      width: 50vw;
       padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       backdrop-filter: blur(12px);
       background: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
       border-radius: 20px;
     }
     .messages {
       flex: 1;
       overflow-y: auto;
       padding-right: 10px;
-      display: flex;
-      flex-direction: column;
     }
     .message {
       margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.8);
       padding: 10px 14px;
       border-radius: 12px;
       max-width: 90%;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      word-break: break-word;
-    }
-    .message.user {
-      align-self: flex-end;
-      background-color: #007aff;
-      color: white;
-    }
-    .message.bot {
-      align-self: flex-start;
-      background-color: rgba(255, 255, 255, 0.8);
-      color: black;
     }
     .recommend {
       margin-top: 8px;
@@ -104,16 +89,16 @@
   <video class="video-bg" src="video.mov" autoplay muted loop></video>
   <div class="chat-container">
     <div class="messages" id="chat-box">
-      <div class="message bot">您好，请叫我曹先生</div>
-      <div class="message recommend">🔍 红楼梦中有哪些美食？</div>
-      <div class="message recommend">🔍 红楼梦中有哪些判词？</div>
-      <div class="message recommend">🔍 红楼梦中有哪些故事？</div>
-      <div class="message recommend">🔍 大梦·红楼有哪些值得一看的亮点？</div>
-      <div class="message recommend">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
-      <div class="message recommend">🔍 你是曹雪芹吗？你是如何AI重生的？</div>
+      <div class="message">您好，请叫我曹先生</div>
+      <div class="message quick">🔍 红楼梦中有哪些美食？</div>
+      <div class="message quick">🔍 红楼梦中有哪些判词？</div>
+      <div class="message quick">🔍 红楼梦中有哪些故事？</div>
+      <div class="message quick">🔍 大梦·红楼有哪些值得一看的亮点？</div>
+      <div class="message quick">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
+      <div class="message quick">🔍 你是曹雪芹吗？你是如何AI重生的？</div>
     </div>
     <div class="input-area">
-      <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
+      <input type="text" id="user-input" placeholder="请输入问题，按 Enter 键发送" />
       <button onclick="sendMessage()">发送</button>
     </div>
   </div>
@@ -127,12 +112,15 @@
       const chatBox = document.getElementById("chat-box");
 
       const userMsg = document.createElement("div");
-      userMsg.className = "message user";
+      userMsg.className = "message";
+      userMsg.style.alignSelf = "flex-end"; // 用户消息靠右
+      userMsg.style.backgroundColor = "#007BFF"; // 蓝底
+      userMsg.style.color = "#fff";
       userMsg.textContent = question;
       chatBox.appendChild(userMsg);
 
       const responseMsg = document.createElement("div");
-      responseMsg.className = "message bot";
+      responseMsg.className = "message";
       chatBox.appendChild(responseMsg);
 
       input.value = "";
@@ -153,36 +141,20 @@
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-
           const lines = chunk.split("\n").filter(line => line.startsWith("data: "));
           for (const line of lines) {
             const jsonStr = line.replace(/^data:\s*/, "");
             try {
               const json = JSON.parse(jsonStr);
-              const content = json.data || json.content || json.answer || "";
+              const content = json.data || "";
               fullText += content;
-              const cleaned = fullText.replace(/<quick_question>[\s\S]*?<\/quick_question>/g, "").trim();
-              responseMsg.textContent = cleaned;
+              responseMsg.textContent = fullText.trim();
               chatBox.scrollTop = chatBox.scrollHeight;
             } catch (e) {
               console.warn("解析失败：", jsonStr);
             }
           }
         }
-
-        const matches = fullText.matchAll(/<quick_question>([\s\S]*?)<\/quick_question>/g);
-        for (const match of matches) {
-          const q = match[1].trim();
-          const qDiv = document.createElement("div");
-          qDiv.className = "recommend";
-          qDiv.textContent = "🔎 " + q;
-          qDiv.onclick = () => {
-            document.getElementById("user-input").value = q;
-            sendMessage();
-          };
-          chatBox.appendChild(qDiv);
-        }
-
       } catch (err) {
         console.error(err);
         responseMsg.textContent = "网络错误，请稍后重试。";
@@ -191,15 +163,20 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    // ✅ 按 Enter 发送（不再需要 Ctrl）
     document.getElementById("user-input").addEventListener("keydown", function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
-    document.querySelectorAll(".recommend").forEach(el => {
+    // ✅ 推荐问句点击后填入输入框，不自动发送
+    document.querySelectorAll(".message.quick").forEach(el => {
       el.addEventListener("click", () => {
         const input = document.getElementById("user-input");
         input.value = el.textContent.replace(/^🔍\s*/, "");
-        sendMessage();
+        input.focus();
       });
     });
   </script>
