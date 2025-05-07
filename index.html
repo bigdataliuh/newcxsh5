@@ -76,6 +76,15 @@
         cursor: pointer;
         font-weight: bold;
       }
+      .quick-question-btn {
+        padding: 8px 12px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
@@ -163,13 +172,8 @@
 
             for (let m of matches) {
               const btn = document.createElement("div");
+              btn.className = "quick-question-btn";
               btn.textContent = m[1].trim();
-              btn.style.padding = "8px 12px";
-              btn.style.background = "white";
-              btn.style.border = "1px solid #ccc";
-              btn.style.borderRadius = "999px";
-              btn.style.cursor = "pointer";
-              btn.style.fontSize = "14px";
               btn.onclick = () => {
                 const input = document.getElementById("user-input");
                 input.value = btn.textContent;
