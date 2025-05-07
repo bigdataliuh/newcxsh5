@@ -162,7 +162,7 @@
                 // ✅ 提取 quick_question 标签内容
                 const matches = [...fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
                 if (matches.length > 0) {
-                    responseMsg.textContent = fullText.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
+                    responseMsg.innerHTML = fullText.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
 
                     const btnContainer = document.createElement("div");
                     btnContainer.style.display = "flex";
@@ -183,7 +183,7 @@
                         btnContainer.appendChild(btn);
                     }
 
-                    chatBox.appendChild(btnContainer);
+                    responseMsg.appendChild(btnContainer);
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
 
