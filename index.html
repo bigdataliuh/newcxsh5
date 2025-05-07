@@ -122,100 +122,84 @@
       </div>
     </div>
 
-<script>
-  async function sendMessage() {
-    const input = document.getElementById("user-input");
-    const question = input.value.trim();
-    if (!question) return;
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById("user-input");
+        const question = input.value.trim();
+        if (!question) return;
 
-    const chatBox = document.getElementById("chat-box");
+        const chatBox = document.getElementById("chat-box");
 
-    // 用户消息（蓝色）
-    const userMsg = document.createElement("div");
-    userMsg.className = "message user";
-    userMsg.textContent = question;
-    chatBox.appendChild(userMsg);
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.textContent = question;
+        chatBox.appendChild(userMsg);
 
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 大模型回答框
-    const responseMsg = document.createElement("div");
-    responseMsg.className = "message";
-    chatBox.appendChild(responseMsg);
+        const responseMsg = document.createElement("div");
+        responseMsg.className = "message";
+        chatBox.appendChild(responseMsg);
 
-    let fullText = "";
+        let fullText = "";
 
-    try {
-      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
+        try {
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
+          });
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value);
+            chunk.split("data:").forEach(part => {
+              if (part.trim()) {
+                fullText += part.trim();
+                responseMsg.textContent = fullText;
+                chatBox.scrollTop = chatBox.scrollHeight;
+              }
+            });
+          }
+
+          // 提取推荐问题
+          const matches = [...fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+          matches.forEach(match => {
+            const quick = document.createElement("div");
+            quick.className = "quick-question-bubble";
+            quick.textContent = match[1];
+            quick.onclick = () => {
+              const input = document.getElementById("user-input");
+              input.value = match[1];
+              input.focus();
+            };
+            chatBox.appendChild(quick);
+          });
+        } catch (err) {
+          responseMsg.textContent = "网络错误，请稍后重试。";
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      document.getElementById("user-input").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          sendMessage();
+        }
       });
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop(); // 保留最后未完整的一行
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const jsonStr = line.slice(6).trim();
-            try {
-              const json = JSON.parse(jsonStr);
-              const chunk = json.content || json.data || json.answer || "";
-              fullText += chunk;
-              responseMsg.textContent = fullText.replace(/<\/?quick_question>/g, "");
-              chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (e) {
-              console.warn("JSON parse error:", jsonStr);
-            }
-          }
-        }
-      }
-
-      // 处理 quick_question
-      const quickMatch = fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g);
-      for (const match of quickMatch) {
-        const qDiv = document.createElement("div");
-        qDiv.className = "quick-question-bubble";
-        qDiv.textContent = match[1];
-        qDiv.onclick = () => {
+      document.querySelectorAll(".message.quick").forEach(el => {
+        el.addEventListener("click", () => {
           const input = document.getElementById("user-input");
-          input.value = match[1];
+          input.value = el.textContent.replace(/^🔍\s*/, "");
           input.focus();
-        };
-        chatBox.appendChild(qDiv);
-      }
-
-    } catch (err) {
-      responseMsg.textContent = "网络错误，请稍后重试。";
-    }
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  document.querySelectorAll(".message.quick").forEach(el => {
-    el.addEventListener("click", () => {
-      const input = document.getElementById("user-input");
-      input.value = el.textContent.replace(/^🔍\s*/, "");
-      input.focus();
-    });
-  });
-</script>
+        });
+      });
+    </script>
   </body>
 </html>
