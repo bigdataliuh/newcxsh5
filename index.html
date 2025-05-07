@@ -27,7 +27,7 @@
     .chat-container {
       position: absolute;
       top: 17vh;
-      right: 15vw; /* ✅ 向右移动 */
+      right: 15vw;
       height: 76vh;
       width: 50vw;
       padding: 20px;
@@ -51,6 +51,11 @@
       border-radius: 12px;
       max-width: 90%;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .user-message {
+      background-color: #007bff;
+      color: white;
+      align-self: flex-end;
     }
     .recommend {
       margin-top: 8px;
@@ -111,14 +116,13 @@
 
       const chatBox = document.getElementById("chat-box");
 
+      // 用户消息
       const userMsg = document.createElement("div");
-      userMsg.className = "message";
-      userMsg.style.alignSelf = "flex-end"; // 用户消息靠右
-      userMsg.style.backgroundColor = "#007BFF"; // 蓝底
-      userMsg.style.color = "#fff";
+      userMsg.className = "message user-message";
       userMsg.textContent = question;
       chatBox.appendChild(userMsg);
 
+      // 回答框
       const responseMsg = document.createElement("div");
       responseMsg.className = "message";
       chatBox.appendChild(responseMsg);
@@ -132,6 +136,15 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question })
         });
+
+        const contentType = res.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+          const json = await res.json();
+          responseMsg.textContent = json.content || json.data || "（无返回内容）";
+          chatBox.scrollTop = chatBox.scrollHeight;
+          return;
+        }
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
@@ -163,7 +176,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // ✅ 按 Enter 发送（不再需要 Ctrl）
     document.getElementById("user-input").addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -171,7 +183,6 @@
       }
     });
 
-    // ✅ 推荐问句点击后填入输入框，不自动发送
     document.querySelectorAll(".message.quick").forEach(el => {
       el.addEventListener("click", () => {
         const input = document.getElementById("user-input");
