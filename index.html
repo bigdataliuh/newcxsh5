@@ -51,9 +51,9 @@
         background: rgba(255, 255, 255, 0.9);
         padding: 10px 14px;
         border-radius: 12px;
-        max-width: 90%;
         word-wrap: break-word;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        max-width: 90%;
       }
       .message.user {
         background-color: #397eff;
@@ -107,62 +107,63 @@
       </div>
     </div>
 
-<script>
-  async function sendMessage() {
-    const input = document.getElementById("user-input");
-    const question = input.value.trim();
-    if (!question) return;
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById("user-input");
+        const question = input.value.trim();
+        if (!question) return;
 
-    const chatBox = document.getElementById("chat-box");
-    const userMsg = document.createElement("div");
-    userMsg.className = "message";
-    userMsg.textContent = question;
-    chatBox.appendChild(userMsg);
+        const chatBox = document.getElementById("chat-box");
 
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
+        // 用户提问气泡（蓝色）
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.textContent = question;
+        chatBox.appendChild(userMsg);
 
-    const responseMsg = document.createElement("div");
-    responseMsg.className = "message";
-    responseMsg.textContent = "曹先生思考中...";
-    chatBox.appendChild(responseMsg);
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-    try {
-      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
+        // 回答气泡
+        const responseMsg = document.createElement("div");
+        responseMsg.className = "message";
+        responseMsg.textContent = "曹先生思考中...";
+        chatBox.appendChild(responseMsg);
+
+        try {
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
+          });
+
+          const data = await res.json();
+          if (data.content) {
+            responseMsg.textContent = data.content.replace(/<\/?quick_question>/g, "");
+          } else {
+            responseMsg.textContent = "抱歉，未能获取回答。";
+          }
+        } catch (err) {
+          responseMsg.textContent = "网络错误，请稍后重试。";
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      document.getElementById("user-input").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          sendMessage();
+        }
       });
 
-      const data = await res.json();
-      if (data.content) {
-        responseMsg.textContent = data.content.replace(/<\/?quick_question>/g, "");
-      } else {
-        responseMsg.textContent = "抱歉，未能获取回答。";
-      }
-    } catch (err) {
-      responseMsg.textContent = "网络错误，请稍后重试。";
-    }
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  // 回车发送（取消 Ctrl+Enter，仅 Enter 即可）
-  document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  // 快捷问题点击填充输入框
-  document.querySelectorAll(".message.quick").forEach(el => {
-    el.addEventListener("click", () => {
-      const input = document.getElementById("user-input");
-      input.value = el.textContent.replace(/^🔍\s*/, "");
-      input.focus();
-    });
-  });
-</script>
+      document.querySelectorAll(".message.quick").forEach(el => {
+        el.addEventListener("click", () => {
+          const input = document.getElementById("user-input");
+          input.value = el.textContent.replace(/^🔍\s*/, "");
+          input.focus();
+        });
+      });
+    </script>
   </body>
 </html>
