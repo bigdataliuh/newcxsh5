@@ -129,15 +129,6 @@
           body: JSON.stringify({ question })
         });
 
-        const contentType = res.headers.get("content-type") || "";
-
-        if (contentType.includes("application/json")) {
-          const json = await res.json();
-          responseMsg.textContent = json.content || json.data || "（无返回内容）";
-          chatBox.scrollTop = chatBox.scrollHeight;
-          return;
-        }
-
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let fullText = "";
