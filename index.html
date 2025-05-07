@@ -107,56 +107,62 @@
       </div>
     </div>
 
-    <script>
-      async function sendMessage() {
-        const input = document.getElementById("user-input");
-        const question = input.value.trim();
-        if (!question) return;
+<script>
+  async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const question = input.value.trim();
+    if (!question) return;
 
-        const chatBox = document.getElementById("chat-box");
+    const chatBox = document.getElementById("chat-box");
+    const userMsg = document.createElement("div");
+    userMsg.className = "message";
+    userMsg.textContent = question;
+    chatBox.appendChild(userMsg);
 
-        const userMsg = document.createElement("div");
-        userMsg.className = "message user";
-        userMsg.textContent = question;
-        chatBox.appendChild(userMsg);
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        input.value = "";
-        chatBox.scrollTop = chatBox.scrollHeight;
+    const responseMsg = document.createElement("div");
+    responseMsg.className = "message";
+    responseMsg.textContent = "曹先生思考中...";
+    chatBox.appendChild(responseMsg);
 
-        const responseMsg = document.createElement("div");
-        responseMsg.className = "message";
-        responseMsg.textContent = "请稍候，正在生成回答...";
-        chatBox.appendChild(responseMsg);
+    try {
+      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
 
-        try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question })
-          });
-
-          const result = await res.json();
-          const content = result?.data?.content || "未返回有效回答内容。";
-          responseMsg.textContent = content;
-
-        } catch (err) {
-          responseMsg.textContent = "网络错误，请稍后重试。";
-        }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+      const data = await res.json();
+      if (data.content) {
+        responseMsg.textContent = data.content.replace(/<\/?quick_question>/g, "");
+      } else {
+        responseMsg.textContent = "抱歉，未能获取回答。";
       }
+    } catch (err) {
+      responseMsg.textContent = "网络错误，请稍后重试。";
+    }
 
-      document.getElementById("user-input").addEventListener("keydown", function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
-      });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-      document.querySelectorAll(".message.quick").forEach(el => {
-        el.addEventListener("click", () => {
-          const input = document.getElementById("user-input");
-          input.value = el.textContent.replace(/^🔍\s*/, "");
-          input.focus();
-        });
-      });
-    </script>
+  // 回车发送（取消 Ctrl+Enter，仅 Enter 即可）
+  document.getElementById("user-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // 快捷问题点击填充输入框
+  document.querySelectorAll(".message.quick").forEach(el => {
+    el.addEventListener("click", () => {
+      const input = document.getElementById("user-input");
+      input.value = el.textContent.replace(/^🔍\s*/, "");
+      input.focus();
+    });
+  });
+</script>
   </body>
 </html>
