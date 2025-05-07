@@ -96,7 +96,7 @@
       </div>
     </div>
 
-    <script>
+   <script>
   async function sendMessage() {
     const input = document.getElementById("user-input");
     const question = input.value.trim();
@@ -113,7 +113,7 @@
 
     const responseMsg = document.createElement("div");
     responseMsg.className = "message";
-    responseMsg.textContent = "";
+    responseMsg.textContent = "思考中...";
     chatBox.appendChild(responseMsg);
 
     try {
@@ -123,33 +123,12 @@
         body: JSON.stringify({ question })
       });
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split("\n\n");
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line.startsWith("data: ")) {
-            try {
-              const jsonStr = line.replace(/^data:\s*/, "");
-              const dataObj = JSON.parse(jsonStr);
-              const content = dataObj.content || "";
-              responseMsg.textContent += content.replace(/<\/?quick_question>/g, "");
-              chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (e) {
-              console.error("JSON 解析失败：", e);
-            }
-          }
-        }
-        buffer = lines[lines.length - 1];
+      const data = await res.json();
+      if (data.content) {
+        responseMsg.textContent = data.content.replace(/<\/?quick_question>/g, "");
+      } else {
+        responseMsg.textContent = "抱歉，未能获取回答。";
       }
-
     } catch (err) {
       responseMsg.textContent = "网络错误，请稍后重试。";
     }
@@ -157,10 +136,15 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
+  // 回车发送（取消 Ctrl+Enter，仅 Enter 即可）
   document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
   });
 
+  // 快捷问题点击填充输入框
   document.querySelectorAll(".message.quick").forEach(el => {
     el.addEventListener("click", () => {
       const input = document.getElementById("user-input");
