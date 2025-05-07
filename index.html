@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>曹先生智能问答</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -17,10 +13,8 @@
     }
     .video-bg {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       object-fit: cover;
       z-index: -1;
     }
@@ -129,7 +123,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
-        console.log("[INFO] 正在发送请求...");
         const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -137,29 +130,22 @@
         });
 
         const contentType = res.headers.get("content-type") || "";
-        console.log("[INFO] 响应类型:", contentType);
 
         if (contentType.includes("application/json")) {
-          console.log("[INFO] 返回普通 JSON 响应");
           const json = await res.json();
-          console.log("[DEBUG] JSON 内容:", json);
           responseMsg.textContent = json.content || json.data || "（无返回内容）";
           chatBox.scrollTop = chatBox.scrollHeight;
           return;
         }
 
-        console.log("[INFO] 返回 SSE 流式响应，准备读取 reader...");
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let fullText = "";
 
         while (true) {
           const { done, value } = await reader.read();
-          console.log("[DEBUG] 读取中：", { done, value });
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-          console.log("[DEBUG] 解码 chunk：", chunk);
-
           const lines = chunk.split("\n").filter(line => line.startsWith("data: "));
           for (const line of lines) {
             const jsonStr = line.replace(/^data:\s*/, "");
@@ -169,14 +155,12 @@
               fullText += content;
               responseMsg.textContent = fullText.trim();
               chatBox.scrollTop = chatBox.scrollHeight;
-              console.log("[DEBUG] 当前累积内容：", fullText);
             } catch (e) {
-              console.warn("[WARN] JSON 解析失败：", jsonStr);
+              continue;
             }
           }
         }
       } catch (err) {
-        console.error("[ERROR] 网络或解析异常：", err);
         responseMsg.textContent = "网络错误，请稍后重试。";
       }
 
