@@ -55,6 +55,7 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       max-width: 90%;
       white-space: pre-wrap;
+      text-indent: 2em;
       line-height: 1.6;
     }
     .message.user {
@@ -62,6 +63,27 @@
       color: white;
       align-self: flex-end;
       max-width: fit-content;
+      text-indent: 0;
+    }
+    .related {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px 14px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-left: 4px solid #6aa1f8;
+      border-radius: 8px;
+    }
+    .related-question {
+      background: #f0f4ff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .related-question:hover {
+      background: #d6e3ff;
     }
     .input-area {
       display: flex;
@@ -88,10 +110,7 @@
     }
     .message.quick {
       cursor: pointer;
-    }
-    .paragraph {
-      text-indent: 2em;
-      margin-bottom: 8px;
+      text-indent: 0;
     }
   </style>
 </head>
@@ -121,7 +140,7 @@
 
       const chatBox = document.getElementById("chat-box");
 
-      // 用户提问蓝色气泡
+      // 添加用户问题气泡（蓝色）
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
       userMsg.textContent = question;
@@ -130,7 +149,7 @@
       input.value = "";
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // 回答气泡
+      // 添加曹先生思考中气泡
       const responseMsg = document.createElement("div");
       responseMsg.className = "message";
       responseMsg.textContent = "曹先生思考中...";
@@ -144,14 +163,29 @@
         });
 
         const data = await res.json();
+
         if (data.content) {
-          // 分段 + 缩进
-          const paragraphs = data.content
-            .replace(/<\/?quick_question>/g, "")
-            .split(/\n+/)
-            .map(p => `<div class="paragraph">${p.trim()}</div>`)
-            .join("");
-          responseMsg.innerHTML = paragraphs;
+          responseMsg.textContent = data.content.replace(/<\/?quick_question>/g, "");
+
+          // 如果有相关问题
+          if (Array.isArray(data.related_questions) && data.related_questions.length) {
+            const relatedDiv = document.createElement("div");
+            relatedDiv.className = "related";
+
+            data.related_questions.forEach(q => {
+              const qEl = document.createElement("div");
+              qEl.className = "related-question";
+              qEl.textContent = q;
+              qEl.onclick = () => {
+                document.getElementById("user-input").value = q;
+                document.getElementById("user-input").focus();
+              };
+              relatedDiv.appendChild(qEl);
+            });
+
+            chatBox.appendChild(relatedDiv);
+          }
+
         } else {
           responseMsg.textContent = "抱歉，未能获取回答。";
         }
