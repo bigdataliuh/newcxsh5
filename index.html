@@ -1,233 +1,197 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>曹先生智能问答</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    html, body {
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow: hidden;
-    }
-    .video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -1;
-    }
-    .chat-container {
-      position: absolute;
-      top: 17vh;
-      right: 7vw;
-      height: 76vh;
-      width: 50vw;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
-      background: rgba(255, 255, 255, 0.3);
-      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-      border-radius: 20px;
-    }
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .message {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px 14px;
-      border-radius: 12px;
-      word-wrap: break-word;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      max-width: 90%;
-      white-space: pre-wrap;
-      text-indent: 2em;
-      line-height: 1.6;
-    }
-    .message.user {
-      background-color: #397eff;
-      color: white;
-      align-self: flex-end;
-      max-width: fit-content;
-      text-indent: 0;
-    }
-    .related {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-      padding: 10px 14px;
-      background-color: rgba(255, 255, 255, 0.6);
-      border-left: 4px solid #6aa1f8;
-      border-radius: 8px;
-    }
-    .related-question {
-      background: #f0f4ff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .related-question:hover {
-      background: #d6e3ff;
-    }
-    .input-area {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding-top: 10px;
-    }
-    .input-area input {
-      flex: 1;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: none;
-      outline: none;
-    }
-    .input-area button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 999px;
-      background-color: #d4237a;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .message.quick {
-      cursor: pointer;
-      text-indent: 0;
-    }
-  </style>
-</head>
-<body>
-  <video class="video-bg" src="video.mov" autoplay muted loop></video>
-  <div class="chat-container">
-    <div class="messages" id="chat-box">
-      <div class="message">您好，请叫我曹先生</div>
-      <div class="message quick">🔍 红楼梦中有哪些美食？</div>
-      <div class="message quick">🔍 红楼梦中有哪些判词？</div>
-      <div class="message quick">🔍 红楼梦中有哪些故事？</div>
-      <div class="message quick">🔍 大梦·红楼有哪些值得一看的亮点？</div>
-      <div class="message quick">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
-      <div class="message quick">🔍 曹先生你是哪里来的？</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>曹先生智能问答</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow: hidden;
+      }
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: -1;
+      }
+      .chat-container {
+        position: absolute;
+        top: 17vh;
+        right: 7vw;
+        height: 76vh;
+        width: 50vw;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+      }
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .message {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 14px;
+        border-radius: 12px;
+        word-wrap: break-word;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        max-width: 90%;
+        white-space: pre-wrap;
+        text-indent: 2em;
+      }
+      .message.user {
+        background-color: #397eff;
+        color: white;
+        align-self: flex-end;
+        max-width: fit-content;
+        text-indent: 0;
+      }
+      .quick-question-bubble {
+        background-color: #f0f0f0;
+        color: #333;
+        padding: 8px 12px;
+        margin-top: 6px;
+        margin-right: auto;
+        border-radius: 999px;
+        display: inline-block;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        max-width: fit-content;
+      }
+      .input-area {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding-top: 10px;
+      }
+      .input-area input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 999px;
+        border: none;
+        outline: none;
+      }
+      .input-area button {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 999px;
+        background-color: #d4237a;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .message.quick {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <video class="video-bg" src="video.mov" autoplay muted loop></video>
+    <div class="chat-container">
+      <div class="messages" id="chat-box">
+        <div class="message">您好，请叫我曹先生</div>
+        <div class="message quick">🔍 红楼梦中有哪些美食？</div>
+        <div class="message quick">🔍 红楼梦中有哪些判词？</div>
+        <div class="message quick">🔍 红楼梦中有哪些故事？</div>
+        <div class="message quick">🔍 大梦·红楼有哪些值得一看的亮点？</div>
+        <div class="message quick">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
+        <div class="message quick">🔍 曹先生你是哪里来的？</div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
+        <button onclick="sendMessage()">发送</button>
+      </div>
     </div>
-    <div class="input-area">
-      <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
-      <button onclick="sendMessage()">发送</button>
-    </div>
-  </div>
 
-<script>
-  async function sendMessage() {
-    const input = document.getElementById("user-input");
-    const question = input.value.trim();
-    if (!question) return;
+    <script>
+      async function sendMessage() {
+        const input = document.getElementById("user-input");
+        const question = input.value.trim();
+        if (!question) return;
 
-    const chatBox = document.getElementById("chat-box");
+        const chatBox = document.getElementById("chat-box");
 
-    // 用户问题（蓝色）
-    const userMsg = document.createElement("div");
-    userMsg.className = "message user";
-    userMsg.textContent = question;
-    chatBox.appendChild(userMsg);
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.textContent = question;
+        chatBox.appendChild(userMsg);
 
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 回答容器
-    const answerContainer = document.createElement("div");
-    answerContainer.className = "message";
-    chatBox.appendChild(answerContainer);
+        const responseMsg = document.createElement("div");
+        responseMsg.className = "message";
+        responseMsg.textContent = "曹先生思考中...";
+        chatBox.appendChild(responseMsg);
 
-    try {
-      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      });
-
-      const data = await res.json();
-      let answer = data.content || "抱歉，未能获取回答。";
-
-      // 提取 quick_question 内容
-      const quickQuestions = [...answer.matchAll(/<quick_question>(.*?)<\/quick_question>/g)].map(m => m[1]);
-      // 移除标签后的回答内容
-      const cleanAnswer = answer.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
-
-      // 格式化段落：添加段间距缩进
-      const formatted = cleanAnswer
-        .split(/\n+/)
-        .map(p => `<p style="text-indent: 2em; margin: 6px 0;">${p}</p>`)
-        .join("");
-
-      // 设置回答内容
-      answerContainer.innerHTML = formatted;
-
-      // 添加关联问题
-      if (quickQuestions.length > 0) {
-        const rel = document.createElement("div");
-        rel.style.marginTop = "10px";
-        rel.style.display = "flex";
-        rel.style.flexWrap = "wrap";
-        rel.style.gap = "8px";
-
-        quickQuestions.forEach(q => {
-          const qBtn = document.createElement("div");
-          qBtn.textContent = "🔍 " + q;
-          qBtn.className = "message quick";
-          qBtn.style.background = "#eee";
-          qBtn.style.padding = "6px 10px";
-          qBtn.style.borderRadius = "16px";
-          qBtn.style.cursor = "pointer";
-          qBtn.style.fontSize = "14px";
-          qBtn.addEventListener("click", () => {
-            input.value = q;
-            input.focus();
+        try {
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
           });
-          rel.appendChild(qBtn);
-        });
 
-        answerContainer.appendChild(rel);
+          const data = await res.json();
+
+          if (data.content) {
+            const mainText = data.content.replace(/<\/?quick_question>/g, '');
+            responseMsg.textContent = mainText;
+
+            const relatedMatches = [...data.content.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+            relatedMatches.forEach(match => {
+              const quick = document.createElement("div");
+              quick.className = "quick-question-bubble";
+              quick.textContent = match[1];
+              quick.onclick = () => {
+                const input = document.getElementById("user-input");
+                input.value = match[1];
+                input.focus();
+              };
+              chatBox.appendChild(quick);
+            });
+          } else {
+            responseMsg.textContent = "抱歉，未能获取回答。";
+          }
+        } catch (err) {
+          responseMsg.textContent = "网络错误，请稍后重试。";
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
 
-    } catch (err) {
-      answerContainer.textContent = "网络错误，请稍后重试。";
-    }
+      document.getElementById("user-input").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
 
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  // 仅按 Enter 发送
-  document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  // 快捷问题填入输入框
-  document.querySelectorAll(".message.quick").forEach(el => {
-    el.addEventListener("click", () => {
-      const input = document.getElementById("user-input");
-      input.value = el.textContent.replace(/^🔍\s*/, "");
-      input.focus();
-    });
-  });
-</script>
-</body>
+      document.querySelectorAll(".message.quick").forEach(el => {
+        el.addEventListener("click", () => {
+          const input = document.getElementById("user-input");
+          input.value = el.textContent.replace(/^🔍\s*/, "");
+          input.focus();
+        });
+      });
+    </script>
+  </body>
 </html>
