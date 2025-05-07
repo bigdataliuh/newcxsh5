@@ -97,71 +97,77 @@
     </div>
 
     <script>
-      async function sendMessage() {
-        const input = document.getElementById("user-input");
-        const question = input.value.trim();
-        if (!question) return;
+  async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const question = input.value.trim();
+    if (!question) return;
 
-        const chatBox = document.getElementById("chat-box");
-        const userMsg = document.createElement("div");
-        userMsg.className = "message";
-        userMsg.textContent = question;
-        chatBox.appendChild(userMsg);
+    const chatBox = document.getElementById("chat-box");
+    const userMsg = document.createElement("div");
+    userMsg.className = "message";
+    userMsg.textContent = question;
+    chatBox.appendChild(userMsg);
 
-        input.value = "";
-        chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        const responseMsg = document.createElement("div");
-        responseMsg.className = "message";
-        responseMsg.textContent = "";
-        chatBox.appendChild(responseMsg);
+    const responseMsg = document.createElement("div");
+    responseMsg.className = "message";
+    responseMsg.textContent = "";
+    chatBox.appendChild(responseMsg);
 
-        try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question })
-          });
+    try {
+      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
 
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let buffer = "";
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-            const lines = buffer.split("\n\n");
-            for (let i = 0; i < lines.length - 1; i++) {
-              const line = lines[i].trim();
-              if (line.startsWith("data: ")) {
-                const content = line.replace(/^data:\s*/, "");
-                responseMsg.textContent += content.replace(/<\/?quick_question>/g, "");
-                chatBox.scrollTop = chatBox.scrollHeight;
-              }
+        const lines = buffer.split("\n\n");
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonStr = line.replace(/^data:\s*/, "");
+              const dataObj = JSON.parse(jsonStr);
+              const content = dataObj.content || "";
+              responseMsg.textContent += content.replace(/<\/?quick_question>/g, "");
+              chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (e) {
+              console.error("JSON 解析失败：", e);
             }
-            buffer = lines[lines.length - 1];
           }
-
-        } catch (err) {
-          responseMsg.textContent = "网络错误，请稍后重试。";
         }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+        buffer = lines[lines.length - 1];
       }
 
-      document.getElementById("user-input").addEventListener("keydown", function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
-      });
+    } catch (err) {
+      responseMsg.textContent = "网络错误，请稍后重试。";
+    }
 
-      document.querySelectorAll(".message.quick").forEach(el => {
-        el.addEventListener("click", () => {
-          const input = document.getElementById("user-input");
-          input.value = el.textContent.replace(/^🔍\s*/, "");
-          input.focus();
-        });
-      });
-    </script>
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  document.getElementById("user-input").addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage();
+  });
+
+  document.querySelectorAll(".message.quick").forEach(el => {
+    el.addEventListener("click", () => {
+      const input = document.getElementById("user-input");
+      input.value = el.textContent.replace(/^🔍\s*/, "");
+      input.focus();
+    });
+  });
+</script>
   </body>
 </html>
