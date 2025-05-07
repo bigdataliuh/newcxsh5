@@ -84,6 +84,7 @@
             cursor: pointer;
             font-size: 14px;
             margin-top: 8px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -165,13 +166,10 @@
                     responseMsg.innerHTML = fullText.replace(/<quick_question>.*?<\/quick_question>/g, "").trim();
 
                     const btnContainer = document.createElement("div");
-                    btnContainer.style.display = "flex";
-                    btnContainer.style.flexWrap = "wrap";
                     btnContainer.style.marginTop = "8px";
-                    btnContainer.style.gap = "6px";
 
                     for (let m of matches) {
-                        const btn = document.createElement("div");
+                        const btn = document.createElement("span");
                         btn.className = "quick-question-btn";
                         btn.textContent = m[1].trim();
                         btn.onclick = () => {
