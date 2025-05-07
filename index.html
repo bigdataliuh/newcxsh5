@@ -122,76 +122,100 @@
       </div>
     </div>
 
-    <script>
-      async function sendMessage() {
-        const input = document.getElementById("user-input");
-        const question = input.value.trim();
-        if (!question) return;
+<script>
+  async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const question = input.value.trim();
+    if (!question) return;
 
-        const chatBox = document.getElementById("chat-box");
+    const chatBox = document.getElementById("chat-box");
 
-        const userMsg = document.createElement("div");
-        userMsg.className = "message user";
-        userMsg.textContent = question;
-        chatBox.appendChild(userMsg);
+    // 用户消息（蓝色）
+    const userMsg = document.createElement("div");
+    userMsg.className = "message user";
+    userMsg.textContent = question;
+    chatBox.appendChild(userMsg);
 
-        input.value = "";
-        chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        const responseMsg = document.createElement("div");
-        responseMsg.className = "message";
-        responseMsg.textContent = "曹先生思考中...";
-        chatBox.appendChild(responseMsg);
+    // 大模型回答框
+    const responseMsg = document.createElement("div");
+    responseMsg.className = "message";
+    chatBox.appendChild(responseMsg);
 
-        try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question })
-          });
+    let fullText = "";
 
-          const data = await res.json();
+    try {
+      const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
 
-          if (data.content) {
-            const mainText = data.content.replace(/<\/?quick_question>/g, '');
-            responseMsg.textContent = mainText;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
 
-            const relatedMatches = [...data.content.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
-            relatedMatches.forEach(match => {
-              const quick = document.createElement("div");
-              quick.className = "quick-question-bubble";
-              quick.textContent = match[1];
-              quick.onclick = () => {
-                const input = document.getElementById("user-input");
-                input.value = match[1];
-                input.focus();
-              };
-              chatBox.appendChild(quick);
-            });
-          } else {
-            responseMsg.textContent = "抱歉，未能获取回答。";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop(); // 保留最后未完整的一行
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const jsonStr = line.slice(6).trim();
+            try {
+              const json = JSON.parse(jsonStr);
+              const chunk = json.content || json.data || json.answer || "";
+              fullText += chunk;
+              responseMsg.textContent = fullText.replace(/<\/?quick_question>/g, "");
+              chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (e) {
+              console.warn("JSON parse error:", jsonStr);
+            }
           }
-        } catch (err) {
-          responseMsg.textContent = "网络错误，请稍后重试。";
         }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
       }
 
-      document.getElementById("user-input").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-
-      document.querySelectorAll(".message.quick").forEach(el => {
-        el.addEventListener("click", () => {
+      // 处理 quick_question
+      const quickMatch = fullText.matchAll(/<quick_question>(.*?)<\/quick_question>/g);
+      for (const match of quickMatch) {
+        const qDiv = document.createElement("div");
+        qDiv.className = "quick-question-bubble";
+        qDiv.textContent = match[1];
+        qDiv.onclick = () => {
           const input = document.getElementById("user-input");
-          input.value = el.textContent.replace(/^🔍\s*/, "");
+          input.value = match[1];
           input.focus();
-        });
-      });
-    </script>
+        };
+        chatBox.appendChild(qDiv);
+      }
+
+    } catch (err) {
+      responseMsg.textContent = "网络错误，请稍后重试。";
+    }
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  document.getElementById("user-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  document.querySelectorAll(".message.quick").forEach(el => {
+    el.addEventListener("click", () => {
+      const input = document.getElementById("user-input");
+      input.value = el.textContent.replace(/^🔍\s*/, "");
+      input.focus();
+    });
+  });
+</script>
   </body>
 </html>
