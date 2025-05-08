@@ -211,9 +211,8 @@
                 quick.className = "quick-question-item";
                 quick.textContent = match[1].trim(); // 去除可能的首尾空白
                 quick.onclick = () => {
-                  const input = document.getElementById("user-input");
-                  input.value = match[1].trim();
-                  input.focus();
+                  // 直接发送问题
+                  sendMessageWithQuestion(match[1].trim());
                 };
                 quickQuestionsList.appendChild(quick);
               });
@@ -231,6 +230,13 @@
         chatBox.scrollTop = chatBox.scrollHeight;
       }
 
+      // 新增函数：用于直接发送指定问题
+      function sendMessageWithQuestion(question) {
+        const input = document.getElementById("user-input");
+        input.value = question;
+        sendMessage();
+      }
+
       document.getElementById("user-input").addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -238,12 +244,20 @@
         }
       });
 
+      // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
-          const input = document.getElementById("user-input");
-          input.value = el.textContent.replace(/^🔍\s*/, "");
-          input.focus();
+          const question = el.textContent.replace(/^🔍\s*/, "");
+          sendMessageWithQuestion(question);
         });
+      });
+
+      // 为后续动态生成的问题框绑定点击事件
+      document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("quick-question-item")) {
+          const question = e.target.textContent;
+          sendMessageWithQuestion(question);
+        }
       });
     </script>
   </body>
