@@ -242,25 +242,12 @@
         }
       });
 
-      // 统一的点击事件处理函数
-      function handleQuestionItemClick(question) {
-        sendMessageWithQuestion(question);
-      }
-
       // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
           const question = el.textContent.replace(/^🔍\s*/, "");
-          handleQuestionItemClick(question);
+          sendMessageWithQuestion(question);
         });
-      });
-
-      // 为后续动态生成的问题框绑定点击事件
-      document.addEventListener("click", function(e) {
-        if (e.target.classList.contains("quick-question-item")) {
-          const question = e.target.textContent;
-          handleQuestionItemClick(question);
-        }
       });
     </script>
   </body>
