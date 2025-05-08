@@ -138,7 +138,7 @@
     <video class="video-bg" src="video.mov" autoplay muted loop></video>
     <div class="chat-container">
       <div class="messages" id="chat-box">
-        <!-- 其他消息 -->
+        <!-- 聊天消息将在这里动态添加 -->
       </div>
       <div class="input-area">
         <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
@@ -154,33 +154,36 @@
 
         const chatBox = document.getElementById("chat-box");
 
+        // 创建用户消息元素
         const userMsg = document.createElement("div");
         userMsg.className = "message user";
         userMsg.textContent = question;
         chatBox.appendChild(userMsg);
 
+        // 清空输入框
         input.value = "";
         chatBox.scrollTop = chatBox.scrollHeight;
 
+        // 创建回答消息元素
         const responseMsg = document.createElement("div");
         responseMsg.className = "message";
         responseMsg.textContent = "曹先生思考中...";
         chatBox.appendChild(responseMsg);
 
         try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question })
-          });
+          // 模拟API请求延迟
+          await new Promise(resolve => setTimeout(resolve, 500));
 
-          const data = await res.json();
+          // 模拟API返回数据
+          const mockData = {
+            content: "我不是曹雪芹，老夫乃是南京市文投集团-文都云（南京）数字科技有限公司依托长干大模型与红楼梦数据集构建的红楼梦AI智能体，我可以为您解答红楼梦中相关内容哦~\n\n<quick_question>贾宝玉最喜爱的女子是谁？</quick_question>\n\n<quick_question>林黛玉的别称是什么？</quick_question>"
+          };
 
-          if (data.content) {
+          if (mockData.content) {
             // 提取 <quick_question> 标签中的内容，考虑换行符
-            const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
+            const relatedMatches = [...mockData.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
             // 去除 <quick_question> 标签，得到主回答内容
-            let mainText = data.content;
+            let mainText = mockData.content;
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
@@ -206,8 +209,7 @@
                 quick.textContent = match[1].trim(); // 去除可能的首尾空白
                 quick.onclick = () => {
                   // 直接发送问题
-                  input.value = match[1].trim();
-                  sendMessage();
+                  sendMessage(); // 调用sendMessage函数发送问题
                 };
                 quickQuestionsList.appendChild(quick);
               });
@@ -243,13 +245,16 @@
       ];
 
       const chatBox = document.getElementById("chat-box");
+
+      // 初始化欢迎消息
+      const welcomeMsg = document.createElement("div");
+      welcomeMsg.className = "message";
+      welcomeMsg.textContent = "您好，请叫我曹先生";
+      chatBox.appendChild(welcomeMsg);
+
+      // 初始化六个问题框
       const initialQuickQuestions = document.createElement("div");
       initialQuickQuestions.className = "quick-questions-container";
-
-      const initialHeader = document.createElement("div");
-      initialHeader.className = "quick-questions-header";
-      initialHeader.textContent = "猜你还想问老夫~";
-      initialQuickQuestions.appendChild(initialHeader);
 
       const initialQuickQuestionsList = document.createElement("div");
       initialQuickQuestionsList.className = "quick-questions-list";
@@ -259,7 +264,7 @@
         item.className = "quick-question-item";
         item.textContent = q;
         item.onclick = () => {
-          document.getElementById("user-input").value = q;
+          // 直接发送问题
           sendMessage();
         };
         initialQuickQuestionsList.appendChild(item);
@@ -268,11 +273,8 @@
       initialQuickQuestions.appendChild(initialQuickQuestionsList);
       chatBox.appendChild(initialQuickQuestions);
 
-      // 初始化欢迎消息
-      const welcomeMsg = document.createElement("div");
-      welcomeMsg.className = "message";
-      welcomeMsg.textContent = "您好，请叫我曹先生";
-      chatBox.appendChild(welcomeMsg);
+      // 初始化时自动触发一次发送消息，以显示初始界面
+      // sendMessage();
     </script>
   </body>
 </html>
