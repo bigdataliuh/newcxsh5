@@ -159,10 +159,13 @@
           const data = await res.json();
 
           if (data.content) {
-            // 提取 <quick_question> 标签中的内容
-            const relatedMatches = [...data.content.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+            // 提取 <quick_question> 标签中的内容，考虑换行符
+            const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
             // 去除 <quick_question> 标签，得到主回答内容
-            const mainText = data.content.replace(/<quick_question>.*?<\/quick_question>/g, '');
+            let mainText = data.content;
+            relatedMatches.forEach(match => {
+              mainText = mainText.replace(match[0], '');
+            });
             responseMsg.textContent = mainText;
 
             // 创建问题框容器
@@ -173,10 +176,10 @@
             relatedMatches.forEach(match => {
               const quick = document.createElement("div");
               quick.className = "quick-question-bubble";
-              quick.textContent = match[1];
+              quick.textContent = match[1].trim(); // 去除可能的首尾空白
               quick.onclick = () => {
                 const input = document.getElementById("user-input");
-                input.value = match[1];
+                input.value = match[1].trim();
                 input.focus();
               };
               quickQuestionsContainer.appendChild(quick);
