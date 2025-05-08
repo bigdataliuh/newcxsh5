@@ -44,7 +44,7 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 8px; /* 减小消息之间的间距 */
+        gap: 8px;
         padding-right: 10px;
       }
       .message {
@@ -80,7 +80,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        margin-top: 8px; /* 减小问题框与回答的间距 */
+        margin-top: 8px;
       }
       .input-area {
         display: flex;
@@ -166,7 +166,7 @@
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
-            responseMsg.textContent = mainText;
+            responseMsg.textContent = mainText.trim(); // 去除首尾空白
 
             // 创建问题框容器
             if (relatedMatches.length > 0) {
