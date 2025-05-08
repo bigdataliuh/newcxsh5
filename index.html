@@ -82,6 +82,30 @@
         gap: 8px;
         margin-top: 8px;
       }
+      .quick-questions-header {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 6px;
+      }
+      .quick-questions-list {
+        background-color: white;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      .quick-question-item {
+        padding: 8px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+      .quick-question-item:hover {
+        background-color: #f5f5f5;
+      }
+      .quick-question-item::before {
+        content: '🔍';
+        margin-right: 8px;
+      }
       .input-area {
         display: flex;
         gap: 10px;
@@ -173,20 +197,28 @@
               const quickQuestionsContainer = document.createElement("div");
               quickQuestionsContainer.className = "quick-questions-container";
 
+              const header = document.createElement("div");
+              header.className = "quick-questions-header";
+              header.textContent = "猜你还想问老夫~";
+              quickQuestionsContainer.appendChild(header);
+
+              const quickQuestionsList = document.createElement("div");
+              quickQuestionsList.className = "quick-questions-list";
+
               // 创建问题框
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
-                quick.className = "quick-question-bubble";
+                quick.className = "quick-question-item";
                 quick.textContent = match[1].trim(); // 去除可能的首尾空白
                 quick.onclick = () => {
                   const input = document.getElementById("user-input");
                   input.value = match[1].trim();
                   input.focus();
                 };
-                quickQuestionsContainer.appendChild(quick);
+                quickQuestionsList.appendChild(quick);
               });
 
-              // 将问题框容器添加到聊天窗口
+              quickQuestionsContainer.appendChild(quickQuestionsList);
               chatBox.appendChild(quickQuestionsContainer);
             }
           } else {
