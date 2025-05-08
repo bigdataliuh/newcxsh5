@@ -138,16 +138,10 @@
     <video class="video-bg" src="video.mov" autoplay muted loop></video>
     <div class="chat-container">
       <div class="messages" id="chat-box">
-        <div class="message">您好，请叫我曹先生</div>
-        <div class="message quick">🔍 红楼梦中有哪些美食？</div>
-        <div class="message quick">🔍 红楼梦中有哪些判词？</div>
-        <div class="message quick">🔍 红楼梦中有哪些故事？</div>
-        <div class="message quick">🔍 大梦·红楼有哪些值得一看的亮点？</div>
-        <div class="message quick">🔍 大梦·红楼和其他红楼梦演出有哪些不同？</div>
-        <div class="message quick">🔍 你是曹雪芹吗？你是如何AI重生的？</div>
+        <!-- 其他消息 -->
       </div>
       <div class="input-area">
-        <input type="text" id="user-input" placeholder="请输入问题，Enter 发送" />
+        <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
         <button onclick="sendMessage()">发送</button>
       </div>
     </div>
@@ -199,7 +193,7 @@
 
               const header = document.createElement("div");
               header.className = "quick-questions-header";
-              header.textContent = "猜你还想问曹先生~";
+              header.textContent = "猜你还想问老夫~";
               quickQuestionsContainer.appendChild(header);
 
               const quickQuestionsList = document.createElement("div");
@@ -211,9 +205,9 @@
                 quick.className = "quick-question-item";
                 quick.textContent = match[1].trim(); // 去除可能的首尾空白
                 quick.onclick = () => {
-                  const input = document.getElementById("user-input");
+                  // 直接发送问题
                   input.value = match[1].trim();
-                  input.focus();
+                  sendMessage();
                 };
                 quickQuestionsList.appendChild(quick);
               });
@@ -238,13 +232,47 @@
         }
       });
 
-      document.querySelectorAll(".message.quick").forEach(el => {
-        el.addEventListener("click", () => {
-          const input = document.getElementById("user-input");
-          input.value = el.textContent.replace(/^🔍\s*/, "");
-          input.focus();
-        });
+      // 初始化聊天窗口上方的六个问题
+      const initialQuestions = [
+        "红楼梦中有哪些美食？",
+        "红楼梦中有哪些判词？",
+        "红楼梦中有哪些故事？",
+        "大梦·红楼有哪些值得一看的亮点？",
+        "大梦·红楼和其他红楼梦演出有哪些不同？",
+        "你是曹雪芹吗？你是如何AI重生的？"
+      ];
+
+      const chatBox = document.getElementById("chat-box");
+      const initialQuickQuestions = document.createElement("div");
+      initialQuickQuestions.className = "quick-questions-container";
+
+      const initialHeader = document.createElement("div");
+      initialHeader.className = "quick-questions-header";
+      initialHeader.textContent = "猜你还想问老夫~";
+      initialQuickQuestions.appendChild(initialHeader);
+
+      const initialQuickQuestionsList = document.createElement("div");
+      initialQuickQuestionsList.className = "quick-questions-list";
+
+      initialQuestions.forEach(q => {
+        const item = document.createElement("div");
+        item.className = "quick-question-item";
+        item.textContent = q;
+        item.onclick = () => {
+          document.getElementById("user-input").value = q;
+          sendMessage();
+        };
+        initialQuickQuestionsList.appendChild(item);
       });
+
+      initialQuickQuestions.appendChild(initialQuickQuestionsList);
+      chatBox.appendChild(initialQuickQuestions);
+
+      // 初始化欢迎消息
+      const welcomeMsg = document.createElement("div");
+      welcomeMsg.className = "message";
+      welcomeMsg.textContent = "您好，请叫我曹先生";
+      chatBox.appendChild(welcomeMsg);
     </script>
   </body>
 </html>
