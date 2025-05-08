@@ -76,6 +76,12 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         max-width: fit-content;
       }
+      .quick-questions-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 12px;
+      }
       .input-area {
         display: flex;
         gap: 10px;
@@ -159,6 +165,10 @@
             const mainText = data.content.replace(/<quick_question>.*?<\/quick_question>/g, '');
             responseMsg.textContent = mainText;
 
+            // 创建问题框容器
+            const quickQuestionsContainer = document.createElement("div");
+            quickQuestionsContainer.className = "quick-questions-container";
+
             // 创建问题框
             relatedMatches.forEach(match => {
               const quick = document.createElement("div");
@@ -169,8 +179,11 @@
                 input.value = match[1];
                 input.focus();
               };
-              chatBox.appendChild(quick);
+              quickQuestionsContainer.appendChild(quick);
             });
+
+            // 将问题框容器添加到聊天窗口
+            chatBox.appendChild(quickQuestionsContainer);
           } else {
             responseMsg.textContent = "抱歉，未能获取回答。";
           }
