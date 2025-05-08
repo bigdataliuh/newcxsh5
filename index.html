@@ -153,7 +153,7 @@
     </div>
 
     <script>
-      async function sendMessage() {
+       async function sendMessage() {
         const input = document.getElementById("user-input");
         const question = input.value.trim();
         if (!question) return;
@@ -183,50 +183,61 @@
           const data = await res.json();
 
           if (data.content) {
-            // 提取 <quick_question> 标签中的内容，考虑换行符
+            // 提取 <quick_question> 标签中的内容
             const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
             // 去除 <quick_question> 标签，得到主回答内容
             let mainText = data.content;
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
-            responseMsg.textContent = mainText.trim(); // 去除首尾空白
+            mainText = mainText.trim(); // 去除首尾空白
 
-            // 创建问题框容器
-            if (relatedMatches.length > 0) {
-              const quickQuestionsContainer = document.createElement("div");
-              quickQuestionsContainer.className = "quick-questions-container";
+            // 模拟逐字输出
+            responseMsg.textContent = ""; // 先清空"曹先生思考中..."
+            let charIndex = 0;
+            const typeInterval = setInterval(() => {
+              if (charIndex < mainText.length) {
+                responseMsg.textContent += mainText[charIndex];
+                charIndex++;
+              } else {
+                clearInterval(typeInterval);
 
-              const header = document.createElement("div");
-              header.className = "quick-questions-header";
-              header.textContent = "猜你还想问曹先生~";
-              quickQuestionsContainer.appendChild(header);
+                // 创建问题框容器
+                if (relatedMatches.length > 0) {
+                  const quickQuestionsContainer = document.createElement("div");
+                  quickQuestionsContainer.className = "quick-questions-container";
 
-              const quickQuestionsList = document.createElement("div");
-              quickQuestionsList.className = "quick-questions-list";
+                  const header = document.createElement("div");
+                  header.className = "quick-questions-header";
+                  header.textContent = "猜你还想问曹先生~";
+                  quickQuestionsContainer.appendChild(header);
 
-              // 创建问题框
-              relatedMatches.forEach(match => {
-                const quick = document.createElement("div");
-                quick.className = "quick-question-item";
-                quick.textContent = match[1].trim(); // 去除可能的首尾空白
-                quick.onclick = () => {
-                  sendMessageWithQuestion(match[1].trim());
-                };
-                quickQuestionsList.appendChild(quick);
-              });
+                  const quickQuestionsList = document.createElement("div");
+                  quickQuestionsList.className = "quick-questions-list";
 
-              quickQuestionsContainer.appendChild(quickQuestionsList);
-              chatBox.appendChild(quickQuestionsContainer);
-            }
+                  relatedMatches.forEach(match => {
+                    const quick = document.createElement("div");
+                    quick.className = "quick-question-item";
+                    quick.textContent = match[1].trim();
+                    quick.onclick = () => {
+                      sendMessageWithQuestion(match[1].trim());
+                    };
+                    quickQuestionsList.appendChild(quick);
+                  });
+
+                  quickQuestionsContainer.appendChild(quickQuestionsList);
+                  chatBox.appendChild(quickQuestionsContainer);
+                }
+              }
+              chatBox.scrollTop = chatBox.scrollHeight;
+            }, 50); // 控制输出速度（毫秒），数值越小速度越快
+
           } else {
             responseMsg.textContent = "抱歉，未能获取回答。";
           }
         } catch (err) {
           responseMsg.textContent = "网络错误，请稍后重试。";
         }
-
-        chatBox.scrollTop = chatBox.scrollHeight;
       }
 
       function sendMessageWithQuestion(question) {
@@ -242,7 +253,6 @@
         }
       });
 
-      // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
           const question = el.textContent.replace(/^🔍\s*/, "");
