@@ -153,10 +153,13 @@
           const data = await res.json();
 
           if (data.content) {
-            const mainText = data.content.replace(/<\/?quick_question>/g, '');
+            // 提取 <quick_question> 标签中的内容
+            const relatedMatches = [...data.content.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+            // 去除 <quick_question> 标签，得到主回答内容
+            const mainText = data.content.replace(/<quick_question>.*?<\/quick_question>/g, '');
             responseMsg.textContent = mainText;
 
-            const relatedMatches = [...data.content.matchAll(/<quick_question>(.*?)<\/quick_question>/g)];
+            // 创建问题框
             relatedMatches.forEach(match => {
               const quick = document.createElement("div");
               quick.className = "quick-question-bubble";
