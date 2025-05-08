@@ -42,10 +42,10 @@
       .messages {
         flex: 1;
         overflow-y: auto;
-        padding-right: 10px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px; /* 减小消息之间的间距 */
+        padding-right: 10px;
       }
       .message {
         background: rgba(255, 255, 255, 0.9);
@@ -80,7 +80,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        margin-top: 12px;
+        margin-top: 8px; /* 减小问题框与回答的间距 */
       }
       .input-area {
         display: flex;
@@ -169,24 +169,26 @@
             responseMsg.textContent = mainText;
 
             // 创建问题框容器
-            const quickQuestionsContainer = document.createElement("div");
-            quickQuestionsContainer.className = "quick-questions-container";
+            if (relatedMatches.length > 0) {
+              const quickQuestionsContainer = document.createElement("div");
+              quickQuestionsContainer.className = "quick-questions-container";
 
-            // 创建问题框
-            relatedMatches.forEach(match => {
-              const quick = document.createElement("div");
-              quick.className = "quick-question-bubble";
-              quick.textContent = match[1].trim(); // 去除可能的首尾空白
-              quick.onclick = () => {
-                const input = document.getElementById("user-input");
-                input.value = match[1].trim();
-                input.focus();
-              };
-              quickQuestionsContainer.appendChild(quick);
-            });
+              // 创建问题框
+              relatedMatches.forEach(match => {
+                const quick = document.createElement("div");
+                quick.className = "quick-question-bubble";
+                quick.textContent = match[1].trim(); // 去除可能的首尾空白
+                quick.onclick = () => {
+                  const input = document.getElementById("user-input");
+                  input.value = match[1].trim();
+                  input.focus();
+                };
+                quickQuestionsContainer.appendChild(quick);
+              });
 
-            // 将问题框容器添加到聊天窗口
-            chatBox.appendChild(quickQuestionsContainer);
+              // 将问题框容器添加到聊天窗口
+              chatBox.appendChild(quickQuestionsContainer);
+            }
           } else {
             responseMsg.textContent = "抱歉，未能获取回答。";
           }
