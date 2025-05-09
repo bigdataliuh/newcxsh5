@@ -174,7 +174,6 @@
         chatBox.appendChild(responseMsg);
 
         try {
-          // 使用 fetch 获取流式数据
           const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -185,11 +184,9 @@
             throw new Error("网络请求失败");
           }
 
-          // 获取可读流
           const reader = res.body.getReader();
           let receivedText = "";
 
-          // 读取流式数据
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
@@ -201,19 +198,17 @@
             chatBox.scrollTop = chatBox.scrollHeight;
           }
 
-          // 处理最终的流式数据
           const data = JSON.parse(receivedText);
-          if (data.content) {
-            // 提取 <quick_question> 标签中的内容，考虑换行符
-            const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
-            // 去除 <quick_question> 标签，得到主回答内容
-            let mainText = data.content;
+          if (data.code === 200 && data.message === "成功") {
+            let content = data.data.nodes[3].properties.config.fields[0].label;
+            const relatedMatches = [...content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
+            let mainText = content;
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
-            mainText = mainText.trim(); // 去除首尾空白
+            mainText = mainText.trim();
+            responseMsg.textContent = mainText;
 
-            // 创建问题框容器
             if (relatedMatches.length > 0) {
               const quickQuestionsContainer = document.createElement("div");
               quickQuestionsContainer.className = "quick-questions-container";
@@ -229,7 +224,7 @@
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
                 quick.className = "quick-question-item";
-                quick.textContent = match[1].trim(); // 去除可能的首尾空白
+                quick.textContent = match[1].trim();
                 quick.onclick = () => {
                   sendMessageWithQuestion(match[1].trim());
                 };
@@ -263,7 +258,6 @@
         }
       });
 
-      // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
           const question = el.textContent.replace(/^🔍\s*/, "");
