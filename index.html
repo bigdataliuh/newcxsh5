@@ -139,12 +139,12 @@
     <div class="chat-container">
       <div class="messages" id="chat-box">
         <div class="message">您好，请叫我曹先生</div>
-        <div class="message quick">🔍红楼梦中有哪些美食？</div>
-        <div class="message quick">🔍红楼梦中有哪些判词？</div>
-        <div class="message quick">🔍红楼梦中有哪些故事？</div>
-        <div class="message quick">🔍大梦·红楼有哪些值得一看的亮点？</div>
-        <div class="message quick">🔍大梦·红楼和其他红楼梦演出有哪些不同？</div>
-        <div class="message quick">🔍你是曹雪芹吗？你是如何AI重生的？</div>
+        <div class="message quick">红楼梦中有哪些美食？</div>
+        <div class="message quick">红楼梦中有哪些判词？</div>
+        <div class="message quick">红楼梦中有哪些故事？</div>
+        <div class="message quick">大梦·红楼有哪些值得一看的亮点？</div>
+        <div class="message quick">大梦·红楼和其他红楼梦演出有哪些不同？</div>
+        <div class="message quick">你是曹雪芹吗？你是如何AI重生的？</div>
       </div>
       <div class="input-area">
         <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
@@ -174,14 +174,35 @@
         chatBox.appendChild(responseMsg);
 
         try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask ", {
+          // 使用 fetch 获取流式数据
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question })
+            body: JSON.stringify({ question }),
           });
 
-          const data = await res.json();
+          if (!res.ok) {
+            throw new Error("网络请求失败");
+          }
 
+          // 获取可读流
+          const reader = res.body.getReader();
+          let receivedText = "";
+
+          // 读取流式数据
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            const chunk = new TextDecoder().decode(value);
+            receivedText += chunk;
+            responseMsg.textContent = receivedText.trim();
+            chatBox.scrollTop = chatBox.scrollHeight;
+          }
+
+          // 处理最终的流式数据
+          const data = JSON.parse(receivedText);
           if (data.content) {
             // 提取 <quick_question> 标签中的内容，考虑换行符
             const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
@@ -190,7 +211,7 @@
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
-            responseMsg.textContent = mainText.trim(); // 去除首尾空白
+            mainText = mainText.trim(); // 去除首尾空白
 
             // 创建问题框容器
             if (relatedMatches.length > 0) {
@@ -205,7 +226,6 @@
               const quickQuestionsList = document.createElement("div");
               quickQuestionsList.className = "quick-questions-list";
 
-              // 创建问题框
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
                 quick.className = "quick-question-item";
@@ -222,6 +242,7 @@
           } else {
             responseMsg.textContent = "抱歉，未能获取回答。";
           }
+
         } catch (err) {
           responseMsg.textContent = "网络错误，请稍后重试。";
         }
