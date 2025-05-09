@@ -139,12 +139,12 @@
     <div class="chat-container">
       <div class="messages" id="chat-box">
         <div class="message">您好，请叫我曹先生</div>
-        <div class="message quick">红楼梦中有哪些美食？</div>
-        <div class="message quick">红楼梦中有哪些判词？</div>
-        <div class="message quick">红楼梦中有哪些故事？</div>
-        <div class="message quick">大梦·红楼有哪些值得一看的亮点？</div>
-        <div class="message quick">大梦·红楼和其他红楼梦演出有哪些不同？</div>
-        <div class="message quick">你是曹雪芹吗？你是如何AI重生的？</div>
+        <div class="message quick">🔍红楼梦中有哪些美食？</div>
+        <div class="message quick">🔍红楼梦中有哪些判词？</div>
+        <div class="message quick">🔍红楼梦中有哪些故事？</div>
+        <div class="message quick">🔍大梦·红楼有哪些值得一看的亮点？</div>
+        <div class="message quick">🔍大梦·红楼和其他红楼梦演出有哪些不同？</div>
+        <div class="message quick">🔍你是曹雪芹吗？你是如何AI重生的？</div>
       </div>
       <div class="input-area">
         <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
@@ -174,51 +174,23 @@
         chatBox.appendChild(responseMsg);
 
         try {
-          const res = await fetch("https://web-production-6954e.up.railway.app/ask", {
+          const res = await fetch("https://web-production-6954e.up.railway.app/ask  ", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question }),
+            body: JSON.stringify({ question })
           });
 
-          if (!res.ok) {
-            throw new Error("网络请求失败");
-          }
+          const data = await res.json();
 
-          // 获取可读流
-          const reader = res.body.getReader();
-          let receivedText = "";
-
-          // 读取流式数据
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-            const chunk = new TextDecoder().decode(value);
-            receivedText += chunk;
-            responseMsg.textContent = receivedText.trim();
-            chatBox.scrollTop = chatBox.scrollHeight;
-          }
-
-          // 模拟流式输出效果
-          const data = JSON.parse(receivedText);
-          if (data.code === 200 && data.message === "成功") {
-            // 提取主回答内容（假设在 data.data 中）
-            let mainText = "";
-            if (data.data.nodes && data.data.nodes.length > 0) {
-              // 假设主回答内容在 nodes[3] 中
-              mainText = data.data.nodes[3].properties.config.fields[0].label;
-            }
-
-            // 提取 <quick_question> 标签中的内容
-            const relatedMatches = [...mainText.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
+          if (data.content) {
+            // 提取 <quick_question> 标签中的内容，考虑换行符
+            const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
             // 去除 <quick_question> 标签，得到主回答内容
-            let finalText = mainText;
+            let mainText = data.content;
             relatedMatches.forEach(match => {
-              finalText = finalText.replace(match[0], '');
+              mainText = mainText.replace(match[0], '');
             });
-            finalText = finalText.trim(); // 去除首尾空白
-            responseMsg.textContent = finalText;
+            responseMsg.textContent = mainText.trim(); // 去除首尾空白
 
             // 创建问题框容器
             if (relatedMatches.length > 0) {
@@ -233,6 +205,7 @@
               const quickQuestionsList = document.createElement("div");
               quickQuestionsList.className = "quick-questions-list";
 
+              // 创建问题框
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
                 quick.className = "quick-question-item";
@@ -249,7 +222,6 @@
           } else {
             responseMsg.textContent = "抱歉，未能获取回答。";
           }
-
         } catch (err) {
           responseMsg.textContent = "网络错误，请稍后重试。";
         }
@@ -270,6 +242,7 @@
         }
       });
 
+      // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
           const question = el.textContent.replace(/^🔍\s*/, "");
