@@ -184,9 +184,11 @@
             throw new Error("网络请求失败");
           }
 
+          // 获取可读流
           const reader = res.body.getReader();
           let receivedText = "";
 
+          // 读取流式数据
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
@@ -198,17 +200,27 @@
             chatBox.scrollTop = chatBox.scrollHeight;
           }
 
+          // 模拟流式输出效果
           const data = JSON.parse(receivedText);
           if (data.code === 200 && data.message === "成功") {
-            let content = data.data.nodes[3].properties.config.fields[0].label;
-            const relatedMatches = [...content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
-            let mainText = content;
-            relatedMatches.forEach(match => {
-              mainText = mainText.replace(match[0], '');
-            });
-            mainText = mainText.trim();
-            responseMsg.textContent = mainText;
+            // 提取主回答内容（假设在 data.data 中）
+            let mainText = "";
+            if (data.data.nodes && data.data.nodes.length > 0) {
+              // 假设主回答内容在 nodes[3] 中
+              mainText = data.data.nodes[3].properties.config.fields[0].label;
+            }
 
+            // 提取 <quick_question> 标签中的内容
+            const relatedMatches = [...mainText.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
+            // 去除 <quick_question> 标签，得到主回答内容
+            let finalText = mainText;
+            relatedMatches.forEach(match => {
+              finalText = finalText.replace(match[0], '');
+            });
+            finalText = finalText.trim(); // 去除首尾空白
+            responseMsg.textContent = finalText;
+
+            // 创建问题框容器
             if (relatedMatches.length > 0) {
               const quickQuestionsContainer = document.createElement("div");
               quickQuestionsContainer.className = "quick-questions-container";
@@ -224,7 +236,7 @@
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
                 quick.className = "quick-question-item";
-                quick.textContent = match[1].trim();
+                quick.textContent = match[1].trim(); // 去除可能的首尾空白
                 quick.onclick = () => {
                   sendMessageWithQuestion(match[1].trim());
                 };
