@@ -64,6 +64,9 @@
         max-width: fit-content;
         text-indent: 0;
       }
+      .message.quick {
+        cursor: pointer;
+      }
       .quick-question-bubble {
         background-color: #f0f0f0;
         color: #333;
@@ -129,8 +132,65 @@
         cursor: pointer;
         font-weight: bold;
       }
-      .message.quick {
-        cursor: pointer;
+
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .chat-container {
+          width: 90vw;
+          right: 5vw;
+          top: 12vh;
+          height: 76vh;
+          padding: 16px;
+        }
+        .input-area input {
+          font-size: 14px;
+        }
+        .input-area button {
+          font-size: 14px;
+        }
+        .message {
+          font-size: 14px;
+        }
+        .quick-question-item {
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .chat-container {
+          width: 96vw;
+          right: 2vw;
+          top: 8vh;
+          height: 82vh;
+          padding: 12px;
+        }
+        .message {
+          font-size: 13px;
+          text-indent: 1.5em;
+        }
+        .input-area {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 6px;
+        }
+        .input-area input {
+          font-size: 13px;
+          padding: 10px;
+          border-radius: 12px;
+        }
+        .input-area button {
+          font-size: 13px;
+          padding: 10px;
+          width: 100%;
+          border-radius: 12px;
+        }
+        .quick-questions-header {
+          font-size: 13px;
+        }
+        .quick-question-item {
+          font-size: 13px;
+          padding: 6px 0;
+        }
       }
     </style>
   </head>
@@ -183,16 +243,13 @@
           const data = await res.json();
 
           if (data.content) {
-            // 提取 <quick_question> 标签中的内容，考虑换行符
             const relatedMatches = [...data.content.matchAll(/<quick_question>\s*(.*?)\s*<\/quick_question>/gs)];
-            // 去除 <quick_question> 标签，得到主回答内容
             let mainText = data.content;
             relatedMatches.forEach(match => {
               mainText = mainText.replace(match[0], '');
             });
-            responseMsg.textContent = mainText.trim(); // 去除首尾空白
+            responseMsg.textContent = mainText.trim();
 
-            // 创建问题框容器
             if (relatedMatches.length > 0) {
               const quickQuestionsContainer = document.createElement("div");
               quickQuestionsContainer.className = "quick-questions-container";
@@ -205,11 +262,10 @@
               const quickQuestionsList = document.createElement("div");
               quickQuestionsList.className = "quick-questions-list";
 
-              // 创建问题框
               relatedMatches.forEach(match => {
                 const quick = document.createElement("div");
                 quick.className = "quick-question-item";
-                quick.textContent = match[1].trim(); // 去除可能的首尾空白
+                quick.textContent = match[1].trim();
                 quick.onclick = () => {
                   sendMessageWithQuestion(match[1].trim());
                 };
@@ -242,7 +298,6 @@
         }
       });
 
-      // 为初始的六个问题框绑定点击事件
       document.querySelectorAll(".message.quick").forEach(el => {
         el.addEventListener("click", () => {
           const question = el.textContent.replace(/^🔍\s*/, "");
