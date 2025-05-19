@@ -40,57 +40,123 @@
             box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
             border-radius: 20px;
         }
-        /* 新增的样式 */
-        @page {
-            size: A5;
-            margin: 0;
-        }
-        body {
-            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-            line-height: 1.8;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: auto;
-            width: auto;
-        }
-        .bg-container {
-            width: calc(148mm - 20px);
-            height: calc(210mm - 20px);
-            box-sizing: border-box;
-            position: relative;
-            border: 1px solid #ddd;
-        }
-        .input-section {
-            position: absolute;
-            top: 0cm;
-            right: 0cm;
+        .messages {
+            flex: 1;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            gap: 8px;
+            padding-right: 10px;
         }
-        input[type="text"] {
+        .message {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            white-space: pre-wrap;
+            text-indent: 2em;
+        }
+        .message.user {
+            background-color: #397eff;
+            color: white;
+            align-self: flex-end;
+            max-width: fit-content;
+            text-indent: 0;
+        }
+        .quick-question-bubble {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 8px 12px;
+            margin-top: 6px;
+            margin-right: auto;
+            border-radius: 999px;
+            display: inline-block;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            max-width: fit-content;
+        }
+        .quick-questions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .quick-questions-header {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .quick-questions-list {
+            background-color: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .quick-question-item {
+            padding: 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .quick-question-item:hover {
+            background-color: #f5f5f5;
+        }
+        .quick-question-item::before {
+            content: '🔍';
+            margin-right: 8px;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-top: 10px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 999px;
+            border: none;
+            outline: none;
+        }
+        .input-area button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 999px;
+            background-color: #d4237a;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .message.quick {
+            cursor: pointer;
+        }
+        /* 新增的样式 */
+        .name-input-section {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+        }
+        .name-input {
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 20px;
-            width: auto;
+            width: 200px;
             font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
             font-size: 16px;
             transition: border-color 0.3s ease;
-            margin-bottom: 10px;
-            writing-mode: vertical-rl;
-            height: 80px;
-            text-align: center;
+            margin-right: 10px;
         }
-        input[type="text"]:focus {
+        .name-input:focus {
             border-color: #ff6b6b;
             outline: none;
         }
-        .vertical-button {
+        .print-button {
             padding: 10px 20px;
             background-color: rgba(255, 0, 0, 0.5);
             color: white;
@@ -99,39 +165,9 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;
-            writing-mode: vertical-rl;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 60px;
         }
-        .vertical-button:hover {
+        .print-button:hover {
             background-color: rgba(255, 0, 0, 0.7);
-        }
-        .user-name-display {
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
-            writing-mode: vertical-rl;
-            margin-left: 10px;
-        }
-        @media print {
-            .input-section {
-                display: none;
-            }
-            .user-name-display {
-                position: absolute;
-                top: 3cm;
-                right: 2cm;
-                writing-mode: vertical-rl;
-            }
-            .bg-container {
-                page-break-after: avoid;
-            }
-            body, .bg-container {
-                margin: 0;
-                padding: 0;
-            }
         }
     </style>
 </head>
@@ -153,11 +189,9 @@
         </div>
     </div>
 
-    <div class="bg-container" id="namePrintArea">
-        <div class="input-section">
-            <input type="text" id="unitInput" placeholder="请告诉我，怎么称呼您？">
-            <button id="submitBtn" class="vertical-button">敬启</button>
-        </div>
+    <div class="name-input-section">
+        <input type="text" id="name-input" class="name-input" placeholder="请输入您的名字" />
+        <button id="print-btn" class="print-button">打印信件</button>
     </div>
 
     <script>
@@ -253,35 +287,13 @@
             });
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const submitBtn = document.getElementById('submitBtn');
-            const unitInput = document.getElementById('unitInput');
-            const bgContainer = document.querySelector('.bg-container');
-            
-            unitInput.addEventListener('input', function() {
-                this.style.width = (this.value.length * 16) + 'px';
-            });
-            
-            submitBtn.addEventListener('click', function() {
-                if (unitInput.value.trim() !== '') {
-                    const inputSection = document.querySelector('.input-section');
-                    const userDisplay = document.createElement('div');
-                    userDisplay.className = 'user-name-display';
-                    userDisplay.innerHTML = unitInput.value;
-                    userDisplay.style.position = 'absolute';
-                    userDisplay.style.top = '3cm';
-                    userDisplay.style.right = '2cm';
-                    
-                    inputSection.style.display = 'none';
-                    bgContainer.appendChild(userDisplay);
-                    
-                    window.print();
-                    
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
-                }
-            });
+        document.getElementById('print-btn').addEventListener('click', function() {
+            const name = document.getElementById('name-input').value.trim();
+            if (name) {
+                window.print();
+            } else {
+                alert('请输入您的名字');
+            }
         });
     </script>
 </body>
