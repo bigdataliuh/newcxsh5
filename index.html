@@ -147,7 +147,7 @@
         }
         .input-section {
             position: absolute;
-            top: 20cm; /* 距离顶部1cm */
+            top: 0cm; /* 距离顶部1cm */
             right: 0cm; /* 距离右侧1cm */
             display: flex;
             flex-direction: column;
@@ -232,15 +232,15 @@
             <div class="message quick">🔍你是曹雪芹吗？你是如何AI重生的？</div>
         </div>
         <div class="input-area">
-            <input type="text" id="user-input" placeholder="请输入问题，Ctrl+Enter 发送" />
+            <input type="text" id="user-input" placeholder="请输入问题" />
             <button onclick="sendMessage()">发送</button>
         </div>
     </div>
 
     <!-- 新增邀请函模块 -->
-    <div class="bg-container">
+    <div class="bg-container" style="border: none; position: absolute; left: 30vw; top: 50vh; transform: translate(-50%, -50%);">
         <div class="input-section">
-            <input type="text" id="unitInput" placeholder="请告诉我，怎么称呼您？">
+            <input type="text" id="unitInput" placeholder="输入姓名">
             <button id="submitBtn" class="vertical-button">敬启</button>
         </div>
     </div>
