@@ -133,41 +133,41 @@
         .message.quick {
             cursor: pointer;
         }
+
         /* 新增的样式 */
-        .name-input-section {
+        #name-print-container {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 50px;
+            left: 25%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        .name-input-container {
             display: flex;
             align-items: center;
+            margin-bottom: 10px;
         }
         .name-input {
-            padding: 8px 12px;
+            width: 80px;
+            height: 40px;
+            padding: 5px 10px;
             border: 1px solid #ddd;
             border-radius: 20px;
-            width: 200px;
-            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            margin-right: 10px;
-        }
-        .name-input:focus {
-            border-color: #ff6b6b;
-            outline: none;
+            font-size: 14px;
+            text-align: center;
         }
         .print-button {
-            padding: 10px 20px;
-            background-color: rgba(255, 0, 0, 0.5);
+            width: 80px;
+            height: 40px;
+            padding: 5px 10px;
+            background-color: #d4237a;
             color: white;
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-        .print-button:hover {
-            background-color: rgba(255, 0, 0, 0.7);
         }
     </style>
 </head>
@@ -189,8 +189,11 @@
         </div>
     </div>
 
-    <div class="name-input-section">
-        <input type="text" id="name-input" class="name-input" placeholder="请输入您的名字" />
+    <!-- 新增的模块 -->
+    <div id="name-print-container">
+        <div class="name-input-container">
+            <input type="text" id="name-input" class="name-input" placeholder="请输入您的名字">
+        </div>
         <button id="print-btn" class="print-button">打印信件</button>
     </div>
 
@@ -287,10 +290,69 @@
             });
         });
 
+        // 新增的打印信件功能
         document.getElementById('print-btn').addEventListener('click', function() {
             const name = document.getElementById('name-input').value.trim();
             if (name) {
-                window.print();
+                // 创建一个隐藏的iframe用于打印
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                const iframeContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        @page {
+                            size: A5;
+                            margin: 0;
+                        }
+                        body {
+                            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+                            line-height: 1.8;
+                            color: #333;
+                            margin: 0;
+                            padding: 20px;
+                            background-color: #f9f9f9;
+                        }
+                        .letter {
+                            width: calc(148mm - 40px);
+                            height: calc(210mm - 40px);
+                            box-sizing: border-box;
+                            position: relative;
+                        }
+                        .user-name {
+                            font-weight: bold;
+                            font-size: 18px;
+                            color: #333;
+                            writing-mode: vertical-rl;
+                            margin-left: 10px;
+                            position: absolute;
+                            top: 3cm;
+                            right: 2cm;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="letter">
+                        <div class="user-name">${name}</div>
+                    </div>
+                </body>
+                </html>
+                `;
+
+                iframe.contentWindow.document.open();
+                iframe.contentWindow.document.write(iframeContent);
+                iframe.contentWindow.document.close();
+
+                // 打印iframe的内容
+                iframe.contentWindow.print();
+
+                // 打印完成后移除iframe
+                setTimeout(function() {
+                    document.body.removeChild(iframe);
+                }, 100);
             } else {
                 alert('请输入您的名字');
             }
